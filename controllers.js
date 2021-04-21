@@ -19,8 +19,8 @@ sentry.configureScope((scope) => {
   scope.setTag('service', 'api')
 })
 
-// Import Sentry plugins
-const { ApplicationError, MUST_CONNECT } = require('./error')
+// Import error helpers
+const { ApplicationError, MUST_CONNECT, OPERATION_FORBIDDEN } = require('./error')
 
 // Controllers
 router.use(sentry.Handlers.requestHandler())
@@ -49,28 +49,37 @@ router.use(async (req, res, next) => {
   }
 })
 
-router.get('/connect', (req, res, next) => {
+// Sync error handler
+// Express will automatically catch this error
+router.get('/syncError', (req, res, next) => {
+  throw new ApplicationError(MUST_CONNECT)
+})
+
+// Async error handler
+// Should be wrapped in a try catch, else won't be caught
+router.get('/getGame/:userId', async (req, res, next) => {
+  const { userId } = req.params
+
   try {
-    // If already connected
-    if (res.locals.me) {
-      return res.redirect('/')
+    const game = await getGameFromUser(userId)
+
+    // Head to 404 handler
+    if (!game) {
+      return next()
     }
 
-    const data = {
-      ...res.locals.data,
-      head: '../head/en/connect',
-      redirect: req.userSession.redirect,
-      connect: 1,
+    if (userId !== res.locals.me._id) {
+      throw new ApplicationError(OPERATION_FORBIDDEN)
     }
 
-    res.render(`${data.lang}/connect.ejs`, { data })
-  } catch (err) {
+    res.send(game)
+  } catch {
     next(err)
   }
 })
 
 // Erreur 404 => handler for unhandled next()
-router.use(async (req, res, next) => {
+router.use((req, res, next) => {
   try {
     res.sendStatus(404)
   } catch (err) {
@@ -103,6 +112,7 @@ router.use((err, req, res) => {
     // Check if custom error
     if (err.custom) {
       scope.setLevel(err.level)
+      scope.setExtra('message', err.message)
     }
 
     // Capture error
