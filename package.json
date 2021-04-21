@@ -1,0 +1,24 @@
+{
+  "name": "SentryErrorManagment",
+  "version": "1.0.0",
+  "description": "Manage errors with Sentry",
+  "main": "app.js",
+  "Author": "Maxime ARBISA <maxime.arbisa@gmail.com>",
+  "dependencies": {
+    "@sentry/node": "^5.27.3",
+    "client-sessions": "~0.7.0",
+    "cookie-parser": "^1.4.5",
+    "cookie-session": "~1.2.0",
+    "deep-freeze": "0.0.1",
+    "express": "^4.17.1",
+    "helmet": "~2.3.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "ie 8"
+  ],
+  "devDependencies": {
+    "prettier": "^2.1.2"
+  }
+}
